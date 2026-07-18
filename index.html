@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Unified Mathematical Exploration Framework</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #07071a;
+      --bg2:       #0d0d22;
+      --bg3:       #12122e;
+      --border:    #2a2060;
+      --border2:   #3a2880;
+      --accent:    #c030e8;
+      --accent2:   #e050ff;
+      --text:      #ddddf8;
+      --text2:     #9090c0;
+      --text3:     #6060a0;
+      --val:       #ff5585;
+      --val2:      #5b9aff;
+      --val3:      #40d0b0;
+      --glow:      rgba(192,48,232,0.25);
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ── HEADER ───────────────────────────────────────── */
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 7px 14px;
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+      min-height: 46px;
+      flex-shrink: 0;
+    }
+    .header-close {
+      color: var(--text3);
+      font-size: 17px;
+      cursor: pointer;
+      user-select: none;
+      line-height: 1;
+    }
+    .header-title {
+      flex: 1;
+      font-size: 13px;
+      color: var(--text2);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .header-icons {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--text3);
+      font-size: 15px;
+    }
+    .header-timer {
+      font-size: 12px;
+      color: var(--val);
+      font-family: monospace;
+      letter-spacing: 1px;
+    }
+
+    /* ── MAIN ─────────────────────────────────────────── */
+    .main {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+    }
+
+    /* ── SIDEBAR ──────────────────────────────────────── */
+    .sidebar {
+      width: 148px;
+      min-width: 148px;
+      background: var(--bg);
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+      overflow-x: hidden;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border2) transparent;
+    }
+    .sidebar::-webkit-scrollbar { width: 4px; }
+    .sidebar::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+
+    .sidebar-header {
+      padding: 10px 10px 6px;
+      font-size: 10px;
+      color: var(--text3);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .sidebar-item {
+      padding: 9px 8px 9px 10px;
+      font-size: 11px;
+      color: var(--text3);
+      cursor: pointer;
+      border-bottom: 1px solid rgba(42,32,96,0.5);
+      line-height: 1.35;
+      transition: background 0.12s, color 0.12s;
+    }
+    .sidebar-item:hover { background: var(--bg3); color: var(--text2); }
+    .sidebar-item.active {
+      background: #1a1040;
+      color: var(--text);
+      border-left: 2px solid var(--accent);
+      padding-left: 8px;
+    }
+    .sidebar-item .si-label {
+      font-size: 10px;
+      color: var(--text3);
+      margin-bottom: 2px;
+    }
+
+    /* ── PANEL ────────────────────────────────────────── */
+    .panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      overflow-x: hidden;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border2) transparent;
+      padding: 10px;
+      gap: 10px;
+      background: var(--bg2);
+    }
+    .panel::-webkit-scrollbar { width: 4px; }
+    .panel::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+
+    /* ── VIZ CONTAINER ────────────────────────────────── */
+    .viz-wrap {
+      position: relative;
+      border-radius: 8px;
+      border: 1px solid var(--border2);
+      overflow: hidden;
+      background: #050512;
+      flex-shrink: 0;
+    }
+    #vizCanvas {
+      display: block;
+      width: 100%;
+      height: 200px;
+    }
+
+    .viz-overlay {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      background: rgba(5,5,20,0.88);
+      border: 1px solid #3a2075;
+      border-radius: 6px;
+      padding: 7px 10px;
+      font-size: 11px;
+      line-height: 1.65;
+      max-width: 220px;
+      backdrop-filter: blur(2px);
+    }
+    .viz-overlay-title {
+      color: var(--accent2);
+      font-weight: 600;
+      font-size: 12px;
+      margin-bottom: 3px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .viz-overlay-title .icon { font-size: 14px; }
+    .viz-ops { color: #9070c8; }
+    .viz-ops li { list-style: disc; margin-left: 14px; }
+    .viz-info {
+      margin-top: 4px;
+      color: var(--val);
+      font-size: 10.5px;
+    }
+    .viz-meta { color: var(--text2); font-size: 10.5px; }
+
+    /* ── BUTTON ROWS ──────────────────────────────────── */
+    .btn-row { display: flex; gap: 7px; flex-wrap: wrap; }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 7px 14px;
+      border-radius: 6px;
+      border: 1px solid var(--border2);
+      background: #130e2e;
+      color: #b090e8;
+      cursor: pointer;
+      font-size: 13px;
+      transition: background 0.13s, border-color 0.13s, color 0.13s;
+      user-select: none;
+      white-space: nowrap;
+    }
+    .btn:hover { background: #1e1448; border-color: var(--accent); color: var(--accent2); }
+    .btn.active, .btn.primary {
+      background: #5a15b0;
+      border-color: #8030e0;
+      color: #fff;
+    }
+    .btn.active:hover, .btn.primary:hover { background: #6820c5; }
+    .btn.reset { background: #1a1030; color: var(--text3); }
+    .btn-half { flex: 1; justify-content: center; }
+
+    /* ── INPUT ROW ────────────────────────────────────── */
+    .input-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .num-input {
+      flex: 1;
+      background: #0a0820;
+      border: 1px solid var(--border2);
+      border-radius: 6px;
+      color: var(--text);
+      padding: 7px 12px;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .num-input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px var(--glow); }
+    .num-input::placeholder { color: var(--text3); }
+
+    /* ── ANALYSIS CARD ────────────────────────────────── */
+    .card {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+    }
+    .card-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 11px;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .card-title .brain { font-size: 17px; }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2px 6px;
+      margin-bottom: 11px;
+    }
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding: 3px 0;
+      font-size: 12px;
+      border-bottom: 1px solid rgba(42,32,96,0.4);
+    }
+    .stat-label { color: var(--text2); }
+    .stat-val { font-weight: 600; color: var(--val); }
+    .stat-val.blue { color: var(--val2); }
+    .stat-val.teal { color: var(--val3); }
+
+    .section-label {
+      font-size: 11px;
+      color: var(--text3);
+      margin-bottom: 5px;
+    }
+    .section-block { margin-bottom: 11px; }
+
+    /* Badges */
+    .badge-row { display: flex; gap: 5px; flex-wrap: wrap; }
+    .badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 500;
+    }
+    .badge-purple { background: #2a0c50; color: #d070ff; border: 1px solid #5a18a0; }
+    .badge-blue   { background: #0c1840; color: #6090ff; border: 1px solid #1c3880; }
+    .badge-teal   { background: #081e1e; color: #3dc8b0; border: 1px solid #187070; }
+    .badge-red    { background: #200818; color: #ff6080; border: 1px solid #601030; }
+
+    .decisions-list { font-size: 12px; color: var(--val2); line-height: 1.8; }
+    .decisions-list li { list-style: disc; margin-left: 14px; }
+
+    /* ── BOTTOM BAR ───────────────────────────────────── */
+    .bottom-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 10px;
+      background: var(--bg);
+      border-top: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .select-label {
+      font-size: 12px;
+      color: var(--text3);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .confirm-btn {
+      background: #d02855;
+      color: #fff;
+      border: none;
+      border-radius: 20px;
+      padding: 9px 22px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.13s, transform 0.1s;
+      letter-spacing: 0.3px;
+    }
+    .confirm-btn:hover { background: #e83060; }
+    .confirm-btn:active { transform: scale(0.96); }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <span class="header-close" onclick="window.close()">✕</span>
+  <div class="header-title">&#x2116; Unified Mathematical Exploration Framework</div>
+  <div class="header-icons">
+    <span title="Network">🌐</span>
+    <span id="pauseBtn" title="Pause/Play" style="cursor:pointer" onclick="toggleTimer()">⏸</span>
+    <span title="Expand">⛶</span>
+  </div>
+  <div class="header-timer" id="timerDisplay">00:00</div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-header">Sessions</div>
+    <div class="sidebar-item active">
+      <div class="si-label">Active</div>
+      Mathematical Framework
+    </div>
+    <div class="sidebar-item" onclick="sidebarClick(this)">Holonomic Analysis</div>
+    <div class="sidebar-item" onclick="sidebarClick(this)">Momentum Co...</div>
+    <div class="sidebar-item" onclick="sidebarClick(this)">Evidence vs. P...</div>
+    <div class="sidebar-item" onclick="sidebarClick(this)">Through: Geometr...</div>
+    <div class="sidebar-item" onclick="sidebarClick(this)">Threshold: Space Divi...</div>
+    <div class="sidebar-item" onclick="sidebarClick(this)">Computational Fra...</div>
+    <div class="sidebar-item" onclick="sidebarClick(this)">Space Division II</div>
+    <div class="sidebar-item" onclick="sidebarClick(this)">Logical Verification...</div>
+    <div class="sidebar-item" onclick="sidebarClick(this)">Emptiness and...</div>
+  </div>
+
+  <!-- PANEL -->
+  <div class="panel">
+
+    <!-- Number input -->
+    <div class="input-row">
+      <input
+        class="num-input"
+        id="numInput"
+        type="number"
+        value="1034"
+        placeholder="Enter a number…"
+        min="0"
+        oninput="onNumberChange()"
+      />
+      <button class="btn primary" onclick="onNumberChange()">Analyze</button>
+    </div>
+
+    <!-- Visualization -->
+    <div class="viz-wrap">
+      <canvas id="vizCanvas"></canvas>
+      <div class="viz-overlay" id="vizOverlay">
+        <!-- filled by JS -->
+      </div>
+    </div>
+
+    <!-- View buttons row 1 -->
+    <div class="btn-row">
+      <button class="btn active btn-half" id="btn-explore" onclick="setView('explore',this)">▶ Explore</button>
+      <button class="btn reset btn-half" onclick="resetAll()">↺ Reset</button>
+    </div>
+
+    <!-- View buttons row 2 -->
+    <div class="btn-row">
+      <button class="btn btn-half" id="btn-zeroops" onclick="setView('zeroops',this)">⚡ Zero Ops</button>
+      <button class="btn btn-half" id="btn-geometry" onclick="setView('geometry',this)">◎ Geometry</button>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-half" id="btn-waves"    onclick="setView('waves',this)">〜 Waves</button>
+      <button class="btn btn-half" id="btn-patterns" onclick="setView('patterns',this)">⊞ Patterns</button>
+    </div>
+
+    <!-- Deep Number Analysis card -->
+    <div class="card" id="analysisCard">
+      <!-- filled by JS -->
+    </div>
+
+  </div>
+</div>
+
+<!-- BOTTOM BAR -->
+<div class="bottom-bar">
+  <div class="select-label">
+    <span>🔍</span> Select
+  </div>
+  <button class="confirm-btn" onclick="confirmAnalysis()">Confirm</button>
+</div>
+
+<script>
+/* ── MATH ENGINE ──────────────────────────────────────────────────── */
+
+function digitalRoot(n) {
+  n = Math.abs(Math.floor(n));
+  if (n === 0) return 0;
+  while (n >= 10) {
+    let s = 0;
+    while (n > 0) { s += n % 10; n = Math.floor(n / 10); }
+    n = s;
+  }
+  return n;
+}
+
+function analyzeNumber(n) {
+  n = Math.abs(Math.floor(n || 0));
+  const digits = String(n).split('').map(Number);
+
+  const dr = digitalRoot(n);
+  const zeros = digits.filter(d => d === 0).length;
+  const frequency = digits.filter(d => d !== 0).length;         // non-zero digit count
+  const complexity = new Set(digits.filter(d => d !== 0)).size; // unique non-zero
+  const energy = (dr / 45 * 100).toFixed(1);
+
+  const type = (n % 2 === 0) ? 'even_space' : 'odd_space';
+
+  const PRIME_DR = new Set([2, 3, 5, 7]);
+  let harmony;
+  if (PRIME_DR.has(dr))       harmony = 'resonant';
+  else if (n % 2 === 0)       harmony = 'dynamic';
+  else                        harmony = 'static';
+
+  const PERSONALITIES = {
+    0: 'void', 1: 'singular', 2: 'binary', 3: 'triadic',
+    4: 'foundational', 5: 'quintessential', 6: 'harmonic',
+    7: 'mystical', 8: 'transcendent', 9: 'universal'
+  };
+  const personality = PERSONALITIES[dr] ?? 'undefined';
+
+  const allUnique = new Set(digits).size === digits.length;
+  let resonance;
+  if (allUnique) resonance = 'unique';
+  else if (digits.every((d, i) => i === 0 || d >= digits[i-1])) resonance = 'ascending';
+  else if (digits.every((d, i) => i === 0 || d <= digits[i-1])) resonance = 'descending';
+  else resonance = 'complex';
+
+  const decisions = [];
+  if (dr >= 8)          decisions.push('infinity contemplation');
+  if (n % 2 === 0)      decisions.push('dimensional shift');
+  if (zeros > 0)        decisions.push('zero amplification');
+  if (resonance === 'unique') decisions.push('unique pattern activation');
+  if (dr === 9)         decisions.push('universal convergence');
+  if (decisions.length === 0) decisions.push('standard analysis');
+
+  const modifiers = [];
+  if (parseFloat(energy) > 15) modifiers.push('luminous');
+  if (zeros > 0)               modifiers.push('void_energy');
+  if (dr >= 7)                 modifiers.push('transcendent_flow');
+  if (complexity >= 4)         modifiers.push('complex_field');
+  if (harmony === 'resonant')  modifiers.push('prime_resonance');
+
+  return { number: n, digits, dr, zeros, frequency, complexity,
+           energy, type, harmony, personality, resonance,
+           decisions, modifiers };
+}
+
+/* ── CANVAS VISUALIZATION ─────────────────────────────────────────── */
+
+// Simple deterministic RNG seeded by number
+function makeRand(seed) {
+  let s = (seed ^ 0xdeadbeef) >>> 0;
+  return () => {
+    s ^= s << 13; s ^= s >> 17; s ^= s << 5;
+    return ((s >>> 0) / 0xffffffff);
+  };
+}
+
+let animFrame = null;
+let animTick = 0;
+let currentView = 'explore';
+
+function drawCanvas(analysis) {
+  const canvas = document.getElementById('vizCanvas');
+  const rect = canvas.parentElement.getBoundingClientRect();
+  const DPR = Math.min(window.devicePixelRatio || 1, 2);
+  const W = rect.width;
+  const H = canvas.offsetHeight || 200;
+  canvas.width  = W * DPR;
+  canvas.height = H * DPR;
+  canvas.style.width  = W + 'px';
+  canvas.style.height = H + 'px';
+
+  const ctx = canvas.getContext('2d');
+  ctx.scale(DPR, DPR);
+  ctx.clearRect(0, 0, W, H);
+
+  const cx = W / 2, cy = H / 2;
+  const rand = makeRand(analysis.number);
+
+  // Background
+  ctx.fillStyle = '#050512';
+  ctx.fillRect(0, 0, W, H);
+
+  if (currentView === 'geometry') {
+    drawGeometry(ctx, W, H, cx, cy, analysis, rand);
+  } else if (currentView === 'waves') {
+    drawWaves(ctx, W, H, cx, cy, analysis, rand);
+  } else if (currentView === 'patterns') {
+    drawPatternGrid(ctx, W, H, cx, cy, analysis, rand);
+  } else {
+    drawStarburst(ctx, W, H, cx, cy, analysis, rand);
+  }
+}
+
+function drawStarburst(ctx, W, H, cx, cy, a, rand) {
+  const radius = Math.min(W, H) * 0.44;
+  const numRays = 10 + a.dr * 3 + a.frequency;
+
+  // Subtle radial rings
+  for (let r = 18; r < radius * 1.1; r += 22) {
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.strokeStyle = `rgba(90,40,140,${0.12 + (r / radius) * 0.04})`;
+    ctx.lineWidth = 0.5;
+    ctx.stroke();
+  }
+
+  // Rays
+  for (let i = 0; i < numRays; i++) {
+    const angle = (i / numRays) * Math.PI * 2 - Math.PI / 2;
+    const lenFactor = 0.45 + rand() * 0.55;
+    const len = radius * lenFactor;
+    const ex = cx + Math.cos(angle) * len;
+    const ey = cy + Math.sin(angle) * len;
+
+    const alpha = 0.35 + rand() * 0.5;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(ex, ey);
+    ctx.strokeStyle = `rgba(210,50,240,${alpha})`;
+    ctx.lineWidth = 0.8 + rand() * 0.5;
+    ctx.stroke();
+
+    // tip dot
+    const tipR = 1.5 + rand() * 2.2;
+    ctx.beginPath();
+    ctx.arc(ex, ey, tipR, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(255,100,255,${0.7 + rand() * 0.3})`;
+    ctx.fill();
+
+    // optional mid-dot
+    if (rand() > 0.45) {
+      const t = 0.35 + rand() * 0.45;
+      ctx.beginPath();
+      ctx.arc(cx + Math.cos(angle) * len * t, cy + Math.sin(angle) * len * t, 1.5 + rand(), 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(180,50,220,${0.5 + rand() * 0.4})`;
+      ctx.fill();
+    }
+  }
+
+  // Scattered background dots
+  for (let i = 0; i < 10; i++) {
+    const r  = 28 + rand() * radius * 0.85;
+    const ag = rand() * Math.PI * 2;
+    ctx.beginPath();
+    ctx.arc(cx + Math.cos(ag) * r, cy + Math.sin(ag) * r, 1.5 + rand() * 2.5, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(200,60,255,${0.3 + rand() * 0.45})`;
+    ctx.fill();
+  }
+
+  // Central glow
+  const grd = ctx.createRadialGradient(cx, cy, 0, cx, cy, 24);
+  grd.addColorStop(0,   '#ffffff');
+  grd.addColorStop(0.2, '#ff90ff');
+  grd.addColorStop(0.6, '#bb30e8');
+  grd.addColorStop(1,   'rgba(0,0,0,0)');
+  ctx.beginPath();
+  ctx.arc(cx, cy, 24, 0, Math.PI * 2);
+  ctx.fillStyle = grd;
+  ctx.fill();
+}
+
+function drawGeometry(ctx, W, H, cx, cy, a, rand) {
+  const R = Math.min(W, H) * 0.38;
+  const sides = 3 + (a.dr % 7);
+  const layers = 3 + a.complexity;
+
+  for (let l = layers; l >= 1; l--) {
+    const r = R * (l / layers);
+    const rot = (animTick * 0.005 * (l % 2 === 0 ? 1 : -1));
+    ctx.beginPath();
+    for (let i = 0; i <= sides; i++) {
+      const ag = (i / sides) * Math.PI * 2 - Math.PI / 2 + rot;
+      const x = cx + Math.cos(ag) * r;
+      const y = cy + Math.sin(ag) * r;
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+    ctx.strokeStyle = `rgba(${160 + l*10},${40 + l*5},${240},${0.3 + l * 0.07})`;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // vertices
+    for (let i = 0; i < sides; i++) {
+      const ag = (i / sides) * Math.PI * 2 - Math.PI / 2 + rot;
+      ctx.beginPath();
+      ctx.arc(cx + Math.cos(ag)*r, cy + Math.sin(ag)*r, 2.5, 0, Math.PI*2);
+      ctx.fillStyle = '#e060ff';
+      ctx.fill();
+    }
+  }
+
+  const grd = ctx.createRadialGradient(cx, cy, 0, cx, cy, 18);
+  grd.addColorStop(0, '#ffffff'); grd.addColorStop(0.4,'#ff88ff'); grd.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.beginPath(); ctx.arc(cx, cy, 18, 0, Math.PI*2); ctx.fillStyle = grd; ctx.fill();
+}
+
+function drawWaves(ctx, W, H, cx, cy, a, rand) {
+  const waves = 2 + a.dr;
+  const amp   = 18 + a.complexity * 4;
+  const freq  = 2 + a.dr * 0.4;
+
+  for (let w = 0; w < waves; w++) {
+    const phase = (w / waves) * Math.PI * 2 + animTick * 0.03;
+    const yBase = H * (0.2 + w * 0.6 / waves);
+    const alpha = 0.25 + (w / waves) * 0.5;
+
+    ctx.beginPath();
+    for (let x = 0; x <= W; x += 2) {
+      const y = yBase + Math.sin((x / W) * Math.PI * 2 * freq + phase) * amp;
+      x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    ctx.strokeStyle = `rgba(${180 + w*15},${50},${230},${alpha})`;
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
+  }
+
+  // Horizontal center glow
+  const lg = ctx.createLinearGradient(0, cy-2, 0, cy+2);
+  lg.addColorStop(0, 'rgba(255,80,255,0.6)');
+  lg.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = lg;
+  ctx.fillRect(0, cy-20, W, 40);
+
+  const grd = ctx.createRadialGradient(cx, cy, 0, cx, cy, 18);
+  grd.addColorStop(0,'#ffffff'); grd.addColorStop(0.4,'#ff88ff'); grd.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.beginPath(); ctx.arc(cx, cy, 18, 0, Math.PI*2); ctx.fillStyle=grd; ctx.fill();
+}
+
+function drawPatternGrid(ctx, W, H, cx, cy, a, rand) {
+  const cols = 4 + a.complexity;
+  const rows = 3 + a.dr % 4;
+  const cw = W / cols, ch = H / rows;
+
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const val = ((c + r + a.dr) * 17 + a.number) % 100;
+      const bright = val / 100;
+      ctx.beginPath();
+      ctx.arc(c * cw + cw/2, r * ch + ch/2, cw * 0.3 * bright + 1, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(${160 + bright*80},${40 + bright*30},${240},${0.3 + bright*0.5})`;
+      ctx.fill();
+    }
+  }
+
+  // Grid lines
+  for (let c = 0; c <= cols; c++) {
+    ctx.beginPath(); ctx.moveTo(c*cw,0); ctx.lineTo(c*cw,H);
+    ctx.strokeStyle='rgba(80,40,130,0.18)'; ctx.lineWidth=0.5; ctx.stroke();
+  }
+  for (let r = 0; r <= rows; r++) {
+    ctx.beginPath(); ctx.moveTo(0,r*ch); ctx.lineTo(W,r*ch);
+    ctx.strokeStyle='rgba(80,40,130,0.18)'; ctx.lineWidth=0.5; ctx.stroke();
+  }
+}
+
+/* ── OVERLAY ──────────────────────────────────────────────────────── */
+
+function updateOverlay(a) {
+  const el = document.getElementById('vizOverlay');
+  const opsHTML = a.decisions.slice(0, 3)
+    .map(d => `<li>${d}</li>`).join('');
+  el.innerHTML = `
+    <div class="viz-overlay-title">
+      <span class="icon">&#x1F522;</span>
+      Number-Guided Operations
+    </div>
+    <ul class="viz-ops">${opsHTML}</ul>
+    <div class="viz-info">
+      Number: <b style="color:#ff80c0">${a.number}</b>
+      &nbsp;|&nbsp; Root: <b style="color:#ff80c0">${a.dr}</b>
+    </div>
+    <div class="viz-meta">
+      Personality: <span style="color:#e070ff">${a.personality}</span>
+    </div>
+    <div class="viz-meta">
+      Patterns: <span style="color:#e070ff">${a.resonance}</span>
+    </div>
+  `;
+}
+
+/* ── ANALYSIS CARD ────────────────────────────────────────────────── */
+
+function updateAnalysisCard(a) {
+  const card = document.getElementById('analysisCard');
+
+  const decisionsHTML = a.decisions.map(d => `<li>${d}</li>`).join('');
+
+  const modBadges = a.modifiers.map(m =>
+    `<span class="badge badge-blue">${m}</span>`
+  ).join('');
+
+  card.innerHTML = `
+    <div class="card-title">
+      <span class="brain">🧠</span> Deep Number Analysis
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-row">
+        <span class="stat-label">Number:</span>
+        <span class="stat-val">${a.number}</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">Type:</span>
+        <span class="stat-val blue">${a.type}</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">Digital Root:</span>
+        <span class="stat-val">${a.dr}</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">Harmony:</span>
+        <span class="stat-val blue">${a.harmony}</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">Energy:</span>
+        <span class="stat-val">${a.energy}%</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">Zeros:</span>
+        <span class="stat-val blue">${a.zeros}</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">Frequency:</span>
+        <span class="stat-val">${a.frequency}</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">Complexity:</span>
+        <span class="stat-val blue">${a.complexity}</span>
+      </div>
+    </div>
+
+    <div class="section-block">
+      <div class="section-label">Mathematical Personality:</div>
+      <div class="badge-row">
+        <span class="badge badge-purple">${a.personality}</span>
+      </div>
+    </div>
+
+    <div class="section-block">
+      <div class="section-label">Resonance Patterns:</div>
+      <div class="badge-row">
+        <span class="badge badge-teal">${a.resonance}</span>
+      </div>
+    </div>
+
+    <div class="section-block">
+      <div class="section-label">Active Decisions (${a.decisions.length}):</div>
+      <ul class="decisions-list">${decisionsHTML}</ul>
+    </div>
+
+    <div class="section-block">
+      <div class="section-label">Intensity Modifiers:</div>
+      <div class="badge-row">${modBadges || '<span class="badge badge-red">none</span>'}</div>
+    </div>
+  `;
+}
+
+/* ── STATE ────────────────────────────────────────────────────────── */
+
+let currentAnalysis = null;
+
+function onNumberChange() {
+  const val = parseInt(document.getElementById('numInput').value) || 0;
+  currentAnalysis = analyzeNumber(val);
+  drawCanvas(currentAnalysis);
+  updateOverlay(currentAnalysis);
+  updateAnalysisCard(currentAnalysis);
+}
+
+function setView(view, btn) {
+  currentView = view;
+  document.querySelectorAll('.btn[id^="btn-"]').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  if (currentAnalysis) drawCanvas(currentAnalysis);
+}
+
+function resetAll() {
+  document.getElementById('numInput').value = '';
+  currentAnalysis = analyzeNumber(0);
+  currentView = 'explore';
+  document.querySelectorAll('.btn[id^="btn-"]').forEach(b => b.classList.remove('active'));
+  document.getElementById('btn-explore').classList.add('active');
+  drawCanvas(currentAnalysis);
+  updateOverlay(currentAnalysis);
+  updateAnalysisCard(currentAnalysis);
+}
+
+function sidebarClick(el) {
+  document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function confirmAnalysis() {
+  if (!currentAnalysis) return;
+  const btn = document.querySelector('.confirm-btn');
+  btn.textContent = '✓ Confirmed';
+  btn.style.background = '#20a060';
+  setTimeout(() => { btn.textContent = 'Confirm'; btn.style.background = ''; }, 1800);
+}
+
+/* ── TIMER ────────────────────────────────────────────────────────── */
+
+let timerSecs = 0;
+let timerRunning = true;
+let timerInterval = null;
+
+function startTimer() {
+  timerInterval = setInterval(() => {
+    if (!timerRunning) return;
+    timerSecs++;
+    const m = String(Math.floor(timerSecs / 60)).padStart(2, '0');
+    const s = String(timerSecs % 60).padStart(2, '0');
+    document.getElementById('timerDisplay').textContent = `${m}:${s}`;
+  }, 1000);
+}
+
+function toggleTimer() {
+  timerRunning = !timerRunning;
+  document.getElementById('pauseBtn').textContent = timerRunning ? '⏸' : '▶';
+}
+
+/* ── ANIMATION LOOP (for Geometry / Waves) ───────────────────────── */
+
+function animLoop() {
+  animTick++;
+  if (currentView === 'geometry' || currentView === 'waves') {
+    if (currentAnalysis) drawCanvas(currentAnalysis);
+  }
+  animFrame = requestAnimationFrame(animLoop);
+}
+
+/* ── INIT ─────────────────────────────────────────────────────────── */
+
+window.addEventListener('DOMContentLoaded', () => {
+  onNumberChange();
+  startTimer();
+  animFrame = requestAnimationFrame(animLoop);
+
+  window.addEventListener('resize', () => {
+    if (currentAnalysis) drawCanvas(currentAnalysis);
+  });
+});
+</script>
+</body>
+</html>

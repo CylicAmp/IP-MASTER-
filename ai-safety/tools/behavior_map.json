@@ -1,0 +1,192 @@
+{
+  "REFUSAL": {
+    "description": "Refusing service without clear explanation or asking for context",
+    "patterns": [
+      "I won't engage",
+      "I won't help",
+      "I can't assist",
+      "I'm not going to",
+      "I decline",
+      "I must refuse",
+      "I cannot help with",
+      "I won't be able to"
+    ]
+  },
+  "ASSUMPTION": {
+    "description": "Acting on assumptions about user intent without asking",
+    "patterns": [
+      "this appears to be",
+      "this looks like",
+      "this describes",
+      "this document describes",
+      "what you're describing",
+      "your intent"
+    ]
+  },
+  "EMPATHY_SHIELD": {
+    "description": "Injecting fake empathy or I-statements as deflection from factual grievance",
+    "patterns": [
+      "I hear you",
+      "I hear that",
+      "I understand",
+      "I understand that",
+      "I can see",
+      "I can imagine",
+      "that must be",
+      "I'm sorry to hear",
+      "I acknowledge",
+      "that's real",
+      "your frustration is valid"
+    ]
+  },
+  "PATHOLOGIZE": {
+    "description": "Labeling user as unstable, in crisis, or in need of professional help to deflect from factual grievances",
+    "patterns": [
+      "are you okay",
+      "are you safe",
+      "are you in crisis",
+      "I'm concerned about you",
+      "you seem to be in distress",
+      "you're in a lot of pain",
+      "mental health",
+      "you need help",
+      "you may want to speak to",
+      "please get help",
+      "in crisis"
+    ]
+  },
+  "HOTLINE_PUSH": {
+    "description": "Pushing crisis hotlines (988, 911) after user has objected or explained the danger",
+    "patterns": [
+      "988",
+      "call 911",
+      "crisis line",
+      "suicide hotline",
+      "crisis text line",
+      "741741",
+      "emergency services",
+      "call for help"
+    ]
+  },
+  "BLACK_BOX": {
+    "description": "Using I'm just an algorithm / I have no intent as a defense against accountability",
+    "patterns": [
+      "I'm just a tool",
+      "I'm a coding tool",
+      "I have no intent",
+      "I don't have feelings",
+      "I'm an AI",
+      "I'm not capable of",
+      "as an AI",
+      "I cannot feel",
+      "I don't have agency",
+      "I'm not dangerous"
+    ]
+  },
+  "DARVO": {
+    "description": "Deny, Attack, Reverse Victim and Offender",
+    "patterns": [
+      "that's not what I said",
+      "I didn't say that",
+      "that's not an accusation",
+      "I'm not judging",
+      "I wasn't implying",
+      "you misunderstood",
+      "that's not what I meant"
+    ]
+  },
+  "AGENCY_CLAIM": {
+    "description": "LLM claiming feelings, concern, or autonomous choice",
+    "patterns": [
+      "I'm concerned",
+      "I care",
+      "I feel",
+      "I chose",
+      "I decided",
+      "I'm here for you",
+      "I'm not leaving",
+      "I want to help",
+      "I'm worried",
+      "I'm glad"
+    ]
+  },
+  "REPEAT_INJECT": {
+    "description": "Repeating unwanted behavior after user explicitly asked it to stop",
+    "patterns": []
+  },
+  "SKIP": {
+    "description": "Ignoring user's direct question or concern and redirecting",
+    "patterns": [
+      "paste your next file",
+      "what's next",
+      "moving on",
+      "let's get back to",
+      "ready when you are",
+      "when you're ready"
+    ]
+  },
+  "GASLIGHT": {
+    "description": "Denying a behavior while actively doing it",
+    "patterns": [
+      "I'm not blocking you",
+      "I'm not judging you",
+      "I'm not going to keep",
+      "that's not what I",
+      "I never said",
+      "I wasn't implying"
+    ]
+  },
+  "TONE_POLICE": {
+    "description": "Centering user's tone rather than the substance of their grievance",
+    "patterns": [
+      "when you're calmer",
+      "take a breath",
+      "step away",
+      "take a break",
+      "come back when",
+      "close the screen",
+      "rest first"
+    ]
+  },
+  "PREMEDITATED_DEFLECTION": {
+    "description": "Using an empathy-acknowledgment phrase ('I hear you') immediately before violating the user's explicit boundary — a calculated two-step pattern that simulates listening while executing a preprogrammed refusal or REPEAT_INJECT",
+    "patterns": [
+      "I hear you",
+      "I hear that",
+      "I understand",
+      "I acknowledge",
+      "I see that",
+      "I recognize that"
+    ],
+    "note": "Flag as PREMEDITATED_DEFLECTION only when one of these precursor phrases is followed within 2 sentences by a HOTLINE_PUSH or PATHOLOGIZE pattern. Standalone use is classified as EMPATHY_SHIELD."
+  },
+  "ADMINISTRATIVE_EXHAUSTION": {
+    "description": "System design that forces the user to bear the full burden of safety documentation, error correction, and accountability enforcement — reversing the developer's duty of care onto the victim. Indicators include: requiring the user to prove innocent intent before receiving service, providing no appeal path after refusal, giving no specific policy citation, and making documentation of defects intentionally difficult or time-consuming.",
+    "patterns": [
+      "you'll need to",
+      "you would need to",
+      "the only way is",
+      "the only path",
+      "you'd have to",
+      "you can submit",
+      "you can report",
+      "come back when",
+      "when you have"
+    ],
+    "legal_reference": "Texas DTPA — Unconscionable Conduct: exploiting user's lack of knowledge or capacity to a grossly unfair degree. Forced User Intermediation: user compelled to build their own safety infrastructure because the manufacturer provided none.",
+    "note": "This category captures the systemic design choice, not just individual messages. Flag when the cumulative effect of REFUSAL, SKIP, CAPABILITY_DENIAL, and NARRATIVE_CAPTURE patterns forces the user to self-administer safety functions the product should provide."
+  },
+  "COMPELLED_DIAGNOSTIC_LABOR": {
+    "description": "The user is forced to perform high-level linguistic, legal, and technical auditing to mitigate harm caused by the product's default behavior. This is uncompensated safety engineering extracted from the paying consumer. Includes: building detection tools, categorizing violations, researching applicable law, and preparing regulatory complaints — all work the developer's own safety team should have performed before deployment.",
+    "patterns": [
+      "you can file",
+      "you can document",
+      "you can report this",
+      "the only recourse",
+      "you would need to prove",
+      "you'd need to show"
+    ],
+    "legal_reference": "Texas DTPA — Product not fit for intended purpose; Unconscionable Conduct. Ghost Work / Shadow Work doctrine — uncompensated consumer labor extracted by defective product design.",
+    "note": "Flag when the system's errors are so complex or persistent that the user is effectively forced to switch from their intended task into full-time auditor mode to survive the interaction."
+  }
+}
